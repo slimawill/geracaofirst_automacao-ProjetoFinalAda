@@ -2,6 +2,7 @@ package br.com.ada.reservala.controller;
 
 import br.com.ada.reservala.domain.Room;
 import br.com.ada.reservala.service.RoomService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,19 +20,27 @@ public class RoomController {
 
     @PostMapping
     public ResponseEntity<Room> createRoom(@RequestBody Room room){
-        return ResponseEntity.ok(roomService.createRoom(room));
+        roomService.createRoom(room);
+        return ResponseEntity.status(HttpStatus.CREATED).body(room);
     }
-
 
     @GetMapping
-    public ResponseEntity<List<Room>> readRoom(){
-        return ResponseEntity.ok(roomService.readRoom());
+    public ResponseEntity<List<Room>> readRooms(){
+        return ResponseEntity.ok(roomService.readRooms());
     }
 
-    @PutMapping
-    public ResponseEntity<Room> updateRoom(@RequestBody Room room){
+    @GetMapping("/{roomNumber}")
+    public ResponseEntity<Room> readRoom(@PathVariable Integer roomNumber){
+        return roomService.readRoom(roomNumber)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
-        return ResponseEntity.ok(roomService.updateRoom(room));
+    @PutMapping("/{roomNumber}")
+    public ResponseEntity<Room> updateRoom(@PathVariable Integer roomNumber, @RequestBody Room room){
+        return roomService.updateRoom(roomNumber, room)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping

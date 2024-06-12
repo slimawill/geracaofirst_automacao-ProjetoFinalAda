@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -15,6 +16,7 @@ public class RoomRepository {
 
     private String createSQL = "insert into room(roomNumber, type, price, available) values (?, ?, ?, ?)";
     private String readSQL = "select * from room";
+    private String readRoomSQL = "select * from room where roomNumber = ?";
     private String updateSQL = "update room SET type=?, price=?, available=? where roomNumber=?";
     private String deleteSQL = "delete from room where roomNumber=?";
 
@@ -33,7 +35,7 @@ public class RoomRepository {
         return room;
     }
 
-    public List<Room> readRoom(){
+    public List<Room> readRooms(){
         RowMapper<Room> rowMapper = ((rs, rowNum) -> new Room(
                 rs.getInt("roomNumber"),
                 rs.getString("type"),
@@ -43,16 +45,34 @@ public class RoomRepository {
         return jdbcTemplate.query(readSQL, rowMapper);
     }
 
+    public Optional<Room> readRoom(Integer roomNumber) {
+        RowMapper<Room> rowMapper = (rs, rowNum) -> new Room(
+                rs.getInt("roomNumber"),
+                rs.getString("type"),
+                rs.getInt("price"),
+                rs.getBoolean("available")
+        );
+        List<Room> rooms = jdbcTemplate.query(readRoomSQL, rowMapper, roomNumber);
+        if (rooms.isEmpty()) {
+            return Optional.empty();
+        } else {
+            return Optional.of(rooms.get(0));
+        }
+    }
+
     public Room updateRoom(Room room){
 
-        jdbcTemplate.update(
+         int result = jdbcTemplate.update(
                 updateSQL,
                 room.getType(),
                 room.getPrice(),
                 room.getAvailable(),
                 room.getRoomNumber()
         );
-        return room;
+         if (result == 1){
+            return room;
+         }
+         return null;
     }
 
     public void deleteRoom(Integer roomNumber){
@@ -60,14 +80,14 @@ public class RoomRepository {
     }
 
     public double getOcupation() {
-        List<Room> rooms = readRoom();
+        List<Room> rooms = readRooms();
         double totalRooms = rooms.size();
         double ocupiedRooms = rooms.stream().filter(room -> !room.getAvailable()).count();
         return (double) (ocupiedRooms *100 / totalRooms);
     }
 
     public Double getRevenue() {
-        List<Room> rooms = readRoom();
+        List<Room> rooms = readRooms();
         return rooms.stream()
                 .filter(room -> !room.getAvailable())
                 .mapToDouble(Room::getPrice)

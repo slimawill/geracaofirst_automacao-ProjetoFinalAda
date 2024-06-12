@@ -20,12 +20,21 @@ public class RoomService {
         return roomRepository.createRoom(room);
     }
 
-    public List<Room> readRoom(){
-        return roomRepository.readRoom();
+    public Optional<Room> readRoom(Integer roomNumber){
+        return roomRepository.readRoom(roomNumber);
     }
 
-    public Room updateRoom(Room room){
-        return roomRepository.updateRoom(room);
+    public List<Room> readRooms(){
+        return roomRepository.readRooms();
+    }
+
+    public Optional<Room> updateRoom(Integer roomNumber, Room room){
+        room.setRoomNumber(roomNumber);
+        Room updatedRoom = roomRepository.updateRoom(room);
+        if (updatedRoom != null){
+            return Optional.of(updatedRoom);
+        }
+        return Optional.empty();
     }
 
     public void deleteRoom(Integer roomNumber){
